@@ -1,5 +1,6 @@
 #add profile?? menu bar
-#publich UI 
+#public UI 
+#save routine info into config
 #https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle
 #https://github.com/antonypro/QGoodWindow
 #https://github.com/ThePBone/FlatTabWidget
@@ -15,7 +16,7 @@ import requests
 import json
 import jsbeautifier
 import re
-import QNotifications
+import QNotifications #pip install python-qnotifications
 import pickle
 #import syntax
 #from qt_material import apply_stylesheet
@@ -24,7 +25,7 @@ _token = ""
 cmsdata = []
 usermail = ""
 survey_count = 0
-option_count = 0
+option_count = 1
 _products = []
 tbcount = 0
 condiname = []
@@ -32,14 +33,16 @@ option = []
 option_ans = []
 extra_valueLst = []
 condi = {}
+rtn = []
 
 #class MainUi(QDialog):
 class MainUi(QMainWindow):
     def __init__(self):
         super(MainUi, self).__init__()
-        loadUi(r"C:\Users\Administrator\Desktop\Work\pfu\skincare_js\login.ui",self)
+        loadUi(r"login.ui",self)
         self.pwd_field.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login_btn.clicked.connect(self.login_post)
+        self.login_btn.setShortcut("Return")
         self._exitbtn.clicked.connect(self._exit)
         self._hidebtn.clicked.connect(self._min)
        
@@ -160,7 +163,7 @@ class LoginScreen(QMainWindow):
 
     def back_to_main(self):
         self.login = LoginScreen()
-        self.login.hide() ##這個沒用啊
+        self.login.hide() ##這個没写好
         welcome.show()
         
         #welcome.setCurrentIndex(widget.currentIndex()-1)
@@ -181,7 +184,23 @@ class LoginScreen(QMainWindow):
         self.notify['QString', 'QString', int, bool].emit("Welcome", "primary", 10000, True) #"primary", "success", "info", "warning", "danger"
 
 
-
+        self.label.setToolTip('Set up survey IDs if you will be using survey')
+        self.dc_qIdField.setToolTip('Find survey optionID from Perfect console')
+        self.dc_qAns.setToolTip('This field can be empty, can be used in advanced mode')
+        self.declear_option_btn.setToolTip('Insert the survey will be use in the logic')
+        self.declear_OptionAns_btn.setToolTip('Insert the survey answers that will be use in the logic')
+        self.extra_nameField.setToolTip('If you will be using extra.info, declare here before insert into the logic')
+        self.dc_specialVar.setToolTip('If you need special variables, declare here before insert into the logic')
+        self.label_7.setToolTip('Click on the concerns that will be use in the logic for calculation')
+        self.customize_cam.setToolTip('Declare customized concern if there is a customization')
+        self.declare_cusCam.setToolTip('Insert the customized concern into the logic for further calculation')
+        self.routine_name.setToolTip('Give a product routine a name')
+        self.routine_id.setToolTip('Input product IDs in the field, and group them as a routine')
+        self.add_routibe_tblBtn.setToolTip('Add products into a routine, can be added when creating logic')
+        
+        
+        
+        
         #login.setWindowTitle("Console Skincare Logic - " + usermail + ' - 登录: '+ timedisplay)
         #pfsearch = pfconsole.PerfectConsoleSearch()
         #widget.addWidget(pfsearch)
@@ -197,8 +216,8 @@ class LoginScreen(QMainWindow):
         self._right_bracket.hide()
         self._left_curlybracket.hide()
         self._right_curlybracket.hide()
-        self.next_surveyBtn_2.hide()
-        self._closeif_btn_2.hide()
+        #self.next_surveyBtn_2.hide()
+        #self._closeif_btn_2.hide()
         self._semicom.hide()
         #exinfoname
         self.label_4.hide()
@@ -232,7 +251,8 @@ class LoginScreen(QMainWindow):
         self.dc_specialVarDetailBtn.clicked.connect(self.insertspecialVarDetail)
         self.insert_specialNameBtn.clicked.connect(self.insertSpecialName)
         self.next_surveyBtn.clicked.connect(self.nextSurvey)
-
+        self.add_routibe_tblBtn.clicked.connect(self.add_routine_tbl)
+        
         ##step 2
         self.enable_darkc.clicked.connect(self.decleardc)
         self.enable_wrink.clicked.connect(self.declearwrink)
@@ -259,7 +279,8 @@ class LoginScreen(QMainWindow):
         self.insert_or.clicked.connect(self.addor)
         self.insert_hasAns.clicked.connect(self.addHasAns)
         self.insert_surveyOption_btn.clicked.connect(self.insertSurveyOption)
-
+        self.insert_routineBtn.clicked.connect(self.insertRtouine)
+        
         #step 3 concern score
         self.darkcircle_score.clicked.connect(self.addDarkCircle)
         self.wrinkles_score.clicked.connect(self.addWrinkles)
@@ -328,24 +349,25 @@ class LoginScreen(QMainWindow):
         #self.remove_condiBtn.clicked.connect(self.RemoveCondi) #整合如table
         self.endingBtn.clicked.connect(self.complete)
         self.nice.clicked.connect(self.nicee)
+        self.checker.clicked.connect(self.validate)
     #step 1
     def nextSurvey(self):
         global survey_count, option_count
         survey_count = int(survey_count)
         survey_count = survey_count + 1
-        option_count = 0
+        option_count = 1
         self.count_survey.setText(str(survey_count))
 
     def addsurvey(self):
         global survey_count, option_count, option, option_ans
         
         survey_count = self.count_survey.text()
-        option_count = option_count + 1
         _qId = self.dc_qIdField.text()
         _ans = self.dc_qAns.text()
         _qId = _qId.strip()
         #_ans = self._ans.strip() #Answer can be blank?
-        if _qId.isnumeric() == True and len(_ans) != 0:
+        #if _qId.isnumeric() == True and len(_ans) != 0:
+        if _qId.isnumeric() == True:
             option_var_name = "var q" + str(survey_count) + "_" + "a" + str(option_count) + " = " + str(_qId) + ";"
             option_var_Ans = "var q" + str(survey_count) + "_" + "a" + str(option_count) + "_ans" + " = " + str(_ans) + ";"
             option_name = "q" + str(survey_count) + "_" + "a" + str(option_count)
@@ -360,13 +382,15 @@ class LoginScreen(QMainWindow):
             self.survey_option_dropdown.addItem(option_name)
             self.survey_ans_dropdown.addItem(option_Ans)
 
+            option_count = option_count + 1
             self.dc_qIdField.clear()
             self.dc_qAns.clear()
         else:
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Invalid ID')
             msgbox.setIcon(msgbox.Warning)
-            msgbox.setText("Survey Option ID can not be empty if you want add survey")
+            msgbox.setText("Survey Option ID can not be empty if you want add survey\nSurvey Answers can be empty.")
             msgbox.exec()
     
     def insertOptionVar(self):
@@ -375,7 +399,7 @@ class LoginScreen(QMainWindow):
 
     def insertOptionAnsVar(self):
         self.selected = self.dcOptionAns_dropDown.currentText()
-        self.tmp_condition.append(self.selected)
+        self.code.append(self.selected)
 
     def addextrainfo(self):
         global extra_valueLst
@@ -388,6 +412,7 @@ class LoginScreen(QMainWindow):
             self.extra_nameField.clear()
         else:
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Invalid Name')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("Name cannot be empty")
@@ -409,6 +434,7 @@ class LoginScreen(QMainWindow):
             self._semicom.setIcon(self.icon)
         else:
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Invalid Name')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("No extra.info name to be declare")
@@ -422,6 +448,7 @@ class LoginScreen(QMainWindow):
             self.tmp_condition.insertPlainText("extra_info." + self.selected + "")
         else:
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Empty extra_info Name')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("No extra.info name to be insert")
@@ -444,9 +471,10 @@ class LoginScreen(QMainWindow):
             self.dc_specialVar.clear()
         else:
             msgbox = QtWidgets.QMessageBox()
-            msgbox.setWindowTitle('Empty Var')
+            msgbox.setStyleSheet("QLabel{ color: black}")
+            msgbox.setWindowTitle('Empty Variable')
             msgbox.setIcon(msgbox.Warning)
-            msgbox.setText("var cannot be empty")
+            msgbox.setText("Variable cannot be empty")
             msgbox.exec()
     
     def insertspecialVarDetail(self):
@@ -460,6 +488,7 @@ class LoginScreen(QMainWindow):
             self._semicom.setIcon(self.icon)
         else:
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Empty name')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("There is no valid name to insert")
@@ -472,47 +501,92 @@ class LoginScreen(QMainWindow):
             self.tmp_condition.insertPlainText(self.selected)
         else:
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Empty Special name')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("There is no valid special name to insert")
             msgbox.exec()
-
-
-
         
-
+    def add_routine_tbl(self):
+        global rtn
+        self.routineName = self.routine_name.text()
+        self.routine_ids = self.routine_id.text()
+        if self.routineName in rtn or len(self.routine_ids) < 1:
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
+            msgbox.setWindowTitle('Error')
+            msgbox.setIcon(msgbox.Warning)
+            msgbox.setText("Name is duplicated or productID is empty.")
+            msgbox.exec()
+        else:
+            try:
+                self.routineName = self.routine_name.text()
+                self.routine_ids = self.routine_id.text()
+                self.row_number = self.routine_table.rowCount()
+                self.routine_table.insertRow(self.row_number) 
+                self.routine_table.setItem(self.row_number, 0, QTableWidgetItem(self.routineName))
+                self.routine_table.setItem(self.row_number, 1, QTableWidgetItem(self.routine_ids))
+                self.routine_table.resizeColumnsToContents()
+                self.routine_dropdown.addItem(self.routineName)
+                rtn.append(self.routineName)
+            except AttributeError as e:
+                print(e)
+    def tick(self,btn):
+        pixmap = QPixmap('tick.png')
+        icon = QIcon(pixmap)
+        btn.setIcon(icon)
+        
     #step 2
     def decleardc(self):
         self.code.append("scores.darkcircle = skin_score.darkcircle;")
+        self.tick(self.enable_darkc)
+        
     def declearwrink(self):
         self.code.append("scores.wrinkle = skin_score.wrinkle;")
+        self.tick(self.enable_wrink)
+        
     def declearspot(self):
         self.code.append("scores.spot = skin_score.spot;")
+        self.tick(self.enable_spots)
+        
     def decleartexture(self):
         self.code.append("scores.texture = skin_score.texture;")
+        self.tick(self.enable_texture)
+        
     def declearoil(self):
         self.code.append("scores.oilness = skin_score.oilness;")
+        self.tick(self.enable_oilness)
+        
     def declearredness(self):
         self.code.append("scores.redness = skin_score.redness;")
+        self.tick(self.enable_redness)
+        
     def declearmoist(self):
         self.code.append("scores.moisture = skin_score.moisture;")
+        self.tick(self.enable_moisture)
+
     def decleareyebag(self):
         self.code.append("scores.eyebag = skin_score.eyebag;")
+        self.tick(self.enable_eyebag)
+        
     def declearradiance(self):
         self.code.append("scores.radiance = skin_score.radiance;")
+        self.tick(self.enable_radiance)
+        
     def declearcustomizeCam(self):
         self._consern = self.customize_cam.text()
         self._consern = self._consern.strip()
         if len(self._consern) != 0:
             self.custom_cam_dropdown.addItem(self._consern)
+            self.dc_custom_cam_dropdown.addItem(self._consern)
             self.customize_cam.clear()
     def declearcustomizeCamToCode(self):
-        self.selected = self.custom_cam_dropdown.currentText()
+        self.selected = self.dc_custom_cam_dropdown.currentText()
         self.code.append("scores." + self.selected + " = skin_score." + self.selected + ";")
 
     def addCustomizeCam(self):
         self.selected = self.custom_cam_dropdown.currentText()
-        self.tmp_condition.append("scores." + self.selected + "")
+        self.tmp_condition.append("scores." + self.selected + " ")
 
 
 
@@ -527,6 +601,12 @@ class LoginScreen(QMainWindow):
 
     def addelseif(self):
         self.tmp_condition.append("else if (")
+        
+        self.notify['QString', 'QString', int, bool].emit("Don't forget to CloseIF when complete the logic", "info", 10000, True)
+
+        self.pixmap = QPixmap('alert.png')
+        self.icon = QIcon(self.pixmap)
+        self._closeif_btn.setIcon(self.icon)
     def addelse(self):
         self.tmp_condition.append("else (")
     def addLet(self):
@@ -695,6 +775,7 @@ class LoginScreen(QMainWindow):
             tbcount = tbcount + 1
         else:
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Invalid ID')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("ProductID can only be numbers")
@@ -717,6 +798,22 @@ class LoginScreen(QMainWindow):
         #self.idList.insertColumn(1)
         self.idList.setHorizontalHeaderLabels(['ID'])
 
+    def insertRtouine(self):
+        self.selected = self.routine_dropdown.currentText()
+        match = self.routine_table.findItems(self.selected, Qt.MatchExactly)
+        if match:
+            for i in match:
+                print(i.text())
+            itemx = match[0].row() #row
+            #itemy = match[0].column() #column #indexAt
+            print(itemx)
+            #print(itemy)
+            ids = self.routine_table.item(itemx,1)
+            print(ids.text())
+            self.tmp_condition.append("product_ids = [" + ids.text() + "];")
+            self.tmp_condition.moveCursor(QTextCursor.End)
+            self.tmp_condition.append("}")
+            
     #Step 5 add to condiDB
     def addToCondiDB(self):
         global condi, condiname
@@ -737,6 +834,7 @@ class LoginScreen(QMainWindow):
             #print(self.condiName)
             #print(condiname)
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Empty or Duplicated')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("Condition name cannot be empty or duplicate")
@@ -833,6 +931,7 @@ class LoginScreen(QMainWindow):
             reply = QMessageBox.warning(self, 'Unfinished Condition', 'You have condition inside the editor, do you want to overwrite it',QMessageBox.Ok | QMessageBox.Close, QMessageBox.Close)
             '''
             msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
             msgbox.setWindowTitle('Unfinished Condition')
             msgbox.setIcon(msgbox.Warning)
             msgbox.setText("You have condition inside the editor, do you want to overwrite it?")
@@ -1014,88 +1113,97 @@ class LoginScreen(QMainWindow):
             '''
             self.notify['QString', 'QString', int, bool].emit('Config saved as\n' + configName + '.pickle', 'success', 5000, True)
 
-
     def loadConfig(self):
         global survey_count, option_count, option, option_ans, condiname, condi
+        
+        configName = self.settingNameField.text()
+        file_exists = os.path.exists(configName + '.pickle')
+        if file_exists:
+            _warning = QMessageBox.warning(self, 'Load Config', 'Load other config will overwrite existing values. Once overwrite there is no revert.\nDo you want load?',QMessageBox.Ok | QMessageBox.Close, QMessageBox.Close)
+            if _warning == QMessageBox.Ok:                
+                self.notify['QString', 'QString', int, bool].emit("Loaded", "success", 10000, True)
+                
+                #remove all code * 2
+                self.tmp_condition.clear()
+                self.code.clear()
+                #remove table * 1
+                self.condi_tableview.clear() 
 
-        _warning = QMessageBox.warning(self, 'Load Config', 'Load other config will overwrite existing values. Once overwrite there is no revert.\nDo you want load?',QMessageBox.Ok | QMessageBox.Close, QMessageBox.Close)
-        if _warning == QMessageBox.Ok:
-            configName = self.settingNameField.text()
-            
-            self.notify['QString', 'QString', int, bool].emit("Loaded", "success", 10000, True)
-            
-            #remove all code * 2
-            self.tmp_condition.clear()
-            self.code.clear()
-            #remove table * 1
-            self.condi_tableview.clear() 
+                #remove PIDlist * 1
+                self.idList.clear() ##這個失敗
 
-            #remove PIDlist * 1
-            self.idList.clear() ##這個失敗
+                #remove droplist * 9
+                self.dcOption_dropDown.clear()
+                self.dcOptionAns_dropDown.clear()
+                self.extraInfo_dropdown.clear()
+                self.dc_specialVar_dropdown.clear()
+                self.custom_cam_dropdown.clear()
+                self.survey_option_dropdown.clear()
+                self.survey_ans_dropdown.clear()
+                self.extraInfoName_dropdown.clear()
+                self.specialVar_dropdown.clear()
+                
+                #remove text fileds
+                self.dc_qIdField.clear()
+                self.dc_qAns.clear()
+                self.extra_nameField.clear()
+                self.dc_specialVar.clear()
+                self.customize_cam.clear()
+                self.freeTextBox.clear()
+                self.productId_field.clear()
+                self.condi_name.clear()
+                self.settingNameField.clear()
 
-            #remove droplist * 9
-            self.dcOption_dropDown.clear()
-            self.dcOptionAns_dropDown.clear()
-            self.extraInfo_dropdown.clear()
-            self.dc_specialVar_dropdown.clear()
-            self.custom_cam_dropdown.clear()
-            self.survey_option_dropdown.clear()
-            self.survey_ans_dropdown.clear()
-            self.extraInfoName_dropdown.clear()
-            self.specialVar_dropdown.clear()
-            
-            #remove text fileds
-            self.dc_qIdField.clear()
-            self.dc_qAns.clear()
-            self.extra_nameField.clear()
-            self.dc_specialVar.clear()
-            self.customize_cam.clear()
-            self.freeTextBox.clear()
-            self.productId_field.clear()
-            self.condi_name.clear()
-            self.settingNameField.clear()
+                
+                #path = r'C:\Users\Administrator\Desktop\Work\pfu\skincare_js'
+                #fr = open(path +'\\' + configName + '.pickle','rb')
+                fr = open(configName + '.pickle','rb')
+                survey_count = pickle.load(fr)
+                self.count_survey.setText(str(survey_count))
+                option_count = pickle.load(fr)
 
-            
-            path = r'C:\Users\Administrator\Desktop\Work\pfu\skincare_js'
-            fr = open(path +'\\' + configName + '.pickle','rb')
-            survey_count = pickle.load(fr)
-            self.count_survey.setText(str(survey_count))
-            option_count = pickle.load(fr)
+                #option = pickle.load(fr)
+                data = pickle.load(fr) #偷個懶
+                for i in data: self.dcOption_dropDown.addItem(i) #沒法直接用addsurvey func啊。。。以後再改
+                #option_ans = pickle.load(fr)
+                data = pickle.load(fr)
+                for i in data: self.dcOptionAns_dropDown.addItem(i)
+                #dc_extraInfo = pickle.load(fr)
+                data = pickle.load(fr)
+                for i in data: self.extraInfo_dropdown.addItem(i)
+                data = pickle.load(fr)
+                for i in data: self.dc_specialVar_dropdown.addItem(i)
+                data = pickle.load(fr)
+                for i in data: self.custom_cam_dropdown.addItem(i)
+                data = pickle.load(fr)
+                for i in data: self.survey_option_dropdown.addItem(i)
+                data = pickle.load(fr)
+                for i in data: self.survey_ans_dropdown.addItem(i)
+                data = pickle.load(fr)
+                for i in data: self.extraInfoName_dropdown.addItem(i)
+                data = pickle.load(fr)
+                for i in data: self.specialVar_dropdown.addItem(i)
+                condiname = pickle.load(fr) #填回condiname的list
+                self.condiTableView() #舒服 直接func
+                condi = pickle.load(fr) #填回condi的dict
+                data = pickle.load(fr) #tmp code
+                self.tmp_condition.append(data)
+                data = pickle.load(fr) #final code
+                #print(data)
+                self.code.append(data)
+                self.nicee()
 
-            #option = pickle.load(fr)
-            data = pickle.load(fr) #偷個懶
-            for i in data: self.dcOption_dropDown.addItem(i) #沒法直接用addsurvey func啊。。。以後再改
-            #option_ans = pickle.load(fr)
-            data = pickle.load(fr)
-            for i in data: self.dcOptionAns_dropDown.addItem(i)
-            #dc_extraInfo = pickle.load(fr)
-            data = pickle.load(fr)
-            for i in data: self.extraInfo_dropdown.addItem(i)
-            data = pickle.load(fr)
-            for i in data: self.dc_specialVar_dropdown.addItem(i)
-            data = pickle.load(fr)
-            for i in data: self.custom_cam_dropdown.addItem(i)
-            data = pickle.load(fr)
-            for i in data: self.survey_option_dropdown.addItem(i)
-            data = pickle.load(fr)
-            for i in data: self.survey_ans_dropdown.addItem(i)
-            data = pickle.load(fr)
-            for i in data: self.extraInfoName_dropdown.addItem(i)
-            data = pickle.load(fr)
-            for i in data: self.specialVar_dropdown.addItem(i)
-            condiname = pickle.load(fr) #填回condiname的list
-            self.condiTableView() #舒服 直接func
-            condi = pickle.load(fr) #填回condi的dict
-            data = pickle.load(fr) #tmp code
-            self.tmp_condition.append(data)
-            data = pickle.load(fr) #final code
-            #print(data)
-            self.code.append(data)
-            self.nicee()
-
+            else:
+                pass
         else:
-            pass
-    
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setStyleSheet("QLabel{ color: black}")
+            msgbox.setWindowTitle('File not exist')
+            msgbox.setIcon(msgbox.Warning)
+            msgbox.setText("The file does not exist.")
+            msgbox.exec()
+            
+            
     def advanced(self):
         self.insert_elseif.show()
         self._letbtn.show()
@@ -1107,8 +1215,8 @@ class LoginScreen(QMainWindow):
         self._right_bracket.show()
         self._left_curlybracket.show()
         self._right_curlybracket.show()
-        self.next_surveyBtn_2.show()
-        self._closeif_btn_2.show()
+        #self.next_surveyBtn_2.show()
+        #self._closeif_btn_2.show()
         self._semicom.show()
         #exinfoname
         self.label_4.show()
@@ -1128,6 +1236,24 @@ class LoginScreen(QMainWindow):
         self.dc_specialVar_dropdown.show()
         self.dc_specialVarDetailBtn.show()
 
+    def validate(self):
+        testdata = {
+            "detectResult": self.skin_scores.toPlainText(),
+            "script": self.code.toPlainText(),
+            "surveyOptions": self.survey_result.toPlainText()
+        }
+        #print(testdata['detectResult'])
+        #print(testdata['script'])
+        #print(testdata['surveyOptions'])
+        try:
+            self.url = 'http://k8s-bc-scrdemoi-7ee69197d0-713182356.ap-northeast-1.elb.amazonaws.com/store-backend/recommendation/validate-js.action'
+            self.HEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
+            x = requests.post(self.url, headers=self.HEADERS, data = testdata)
+            self.checker_output.setText(x.text)
+            #print(x.text)
+        except KeyError:
+            print("error")
+            pass
 
 
 def au():
@@ -1143,7 +1269,8 @@ class popdisplay(QWidget):
 
 app = QApplication(sys.argv)
 #apply_stylesheet(app, theme='light_purple.xml')
-welcome = MainUi()
+#welcome = MainUi() remove login UNcomment加回login
+welcome = LoginScreen()
 #widget = QStackedWidget()
 #widget.setWindowTitle("Skincare Logic")
 #widget.addWidget(welcome)
@@ -1153,8 +1280,8 @@ welcome.setMaximumWidth(1600)
 welcome.setMaximumHeight(800)
 welcome.setMinimumWidth(1600)
 welcome.setMinimumHeight(800)
-welcome.setWindowFlag(Qt.FramelessWindowHint)
-welcome.setAttribute(Qt.WA_TranslucentBackground)
+#welcome.setWindowFlag(Qt.FramelessWindowHint)  remove login UNcomment加回login
+#welcome.setAttribute(Qt.WA_TranslucentBackground) remove login UNcomment加回login
 welcome.show()
 #widget.show()
 
