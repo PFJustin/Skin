@@ -33,7 +33,7 @@ https://www.python.org/downloads/release/python-3913/
 # Step 3 - Launch
 Please read guide for 2 ways of running the code.
 
-# How to load setting or load sample
+# How to load setting or load sample setting
 1: Make sure setting files are in the same folder level as main.py
 ![image](https://user-images.githubusercontent.com/108107781/187398557-e113649e-dc4b-4e4c-96d5-c66393c6bd1f.png)
 
