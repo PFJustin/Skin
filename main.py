@@ -1276,10 +1276,10 @@ welcome = LoginScreen()
 #widget.addWidget(welcome)
 #console = pfconsole.MainWindow()
 #widget.addWidget(console)
-welcome.setMaximumWidth(1600)
-welcome.setMaximumHeight(800)
+#welcome.setMaximumWidth(1600)
+#welcome.setMaximumHeight(800)
 welcome.setMinimumWidth(1600)
-welcome.setMinimumHeight(800)
+welcome.setMinimumHeight(900)
 #welcome.setWindowFlag(Qt.FramelessWindowHint)  remove login UNcomment加回login
 #welcome.setAttribute(Qt.WA_TranslucentBackground) remove login UNcomment加回login
 welcome.show()
