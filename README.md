@@ -1,3 +1,6 @@
+# Packed
+Packed can be download from release page without setting up environment
+
 # Skin JS Tool
 Read guide from Guide_0829.pptx. Quick guide below
 
